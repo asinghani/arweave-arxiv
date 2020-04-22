@@ -71,7 +71,7 @@ def upload(arxivID, year, month, block, pdf_name):
 
 
     printd("Uploaded {}, txid={}".format(arxivID, txid))
-    sleep(1)
+    sleep(120)
 
     return txid
 
