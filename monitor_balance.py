@@ -1,6 +1,7 @@
 from webhook import report_balance
 from time import sleep
 from arweave import Wallet
+import sys
 
 wallet = Wallet(sys.argv[1])
 
