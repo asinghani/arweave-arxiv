@@ -1,0 +1,39 @@
+
+
+Download manifest
+manifest -> CSV (id (year/mo/block), year, month, block, filename, status={new(0), downloaded(1), started(2), done(3)})
+
+per section id -> CSV of papers (id, status={new(0), done(1), toobig(2)}, txid)
+per section id -> CSV of completed papers
+
+
+
+Download manifest and generate (once)
+
+Download tar.gz file (per section)
+Generate CSV of papers (per section)
+
+Upload each paper (per paper)
+
+N = 4?
+Downloader - download N blocks and prepare (if at :25-:35 wait)
+Every minute (:00) check if one block is completed and download new
+
+Uploader - every minute (:30) check if any downloaded or started blocks in manifest
+start uploading
+when done uploading, mark (if at :55-:05, wait) as done
+
+
+
+
+TAGS:
+paper_upload = "F29C5A83" / "STAGING"
+version = 1
+source = "ARXIV"
+id = <arxiv ID>
+year = <year>
+month = <month>
+block = <block #>
+
+
+OUT folder can be cleared as needed, CSV folder cannot
