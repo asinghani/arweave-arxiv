@@ -1,10 +1,13 @@
-import boto3, os, glob, json
+import boto3, os, glob, json, sys
 from time import sleep
 from datetime import datetime, time
 
 from webhook import report_download
 
-with open("/Users/anish/.nobkp/s3cred.json") as f:
+if len(sys.argv) < 2:
+    print("Usage: {} <S3 json file>".format(sys.argv[0]))
+
+with open(sys.argv[1]) as f:
     creds = json.load(f)
 
 S3 = boto3.client("s3", aws_access_key_id=creds["accessKeyId"], aws_secret_access_key=creds["secretAccessKey"])

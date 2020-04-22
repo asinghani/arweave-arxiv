@@ -1,4 +1,4 @@
-import boto3, os, glob, json
+import boto3, os, glob, json, sys
 from time import sleep
 from datetime import datetime, time
 from arweave import Transaction, Wallet
@@ -10,8 +10,10 @@ from webhook import report_upload, report_uploadtoobig
 
 millis = lambda: int(round(time.time() * 1000))
 
+if len(sys.argv) < 3:
+    print("Usage: {} <wallet filename> <DEV/STAGING/PROD>".format(sys.argv[0]))
 
-wallet = Wallet("DevWallet")
+wallet = Wallet(sys.argv[1])
 
 DEBUG = True
 
@@ -36,7 +38,6 @@ def log_toobig(arxivID, year, month, block, pdf_name):
     report_uploadtoobig(arxivID, block)
 
 def upload(arxivID, year, month, block, pdf_name):
-    paper_upload = "TEST TEST TEST"
     version = 1
     source = "ARXIV"
 
@@ -53,13 +54,15 @@ def upload(arxivID, year, month, block, pdf_name):
     with open(filename, "rb") as pdf_file:
         txn = Transaction(wallet, data=pdf_file.read())
 
-    txn.add_tag("paper_upload", paper_upload)
-    txn.add_tag("version", str(version))
-    txn.add_tag("source", source)
-    txn.add_tag("id", arxivID)
-    txn.add_tag("year", str(year))
-    txn.add_tag("month", str(month))
-    txn.add_tag("block", block)
+    txn.add_tag("App-Name", "paper-archiver")
+    txn.add_tag("App-Env", sys.argv[2])
+    txn.add_tag("App-Version", str(version))
+    txn.add_tag("Source", source)
+    txn.add_tag("Id", arxivID)
+    txn.add_tag("Year", str(year))
+    txn.add_tag("Month", str(month))
+    txn.add_tag("Block", block)
+    txn.add_tag("Content-Type", "application/pdf")
 
     txn.sign()
     txn.send()
@@ -156,41 +159,41 @@ def get_paper(block_id):
     printd("Block {} done".format(block_id))
     return None
 
-
-while True:
-    while get_seconds() < 27 or get_seconds() > 33:
-        sleep(1)
-
-    next_block, n = get_block()
-
-    if next_block is None:
-        sleep(10)
-        continue
-
-    block_id, year, month, blockNum, filename, status = next_block.split(",")
-
-    printd("Starting block {}".format(block_id))
-
-    mark_block(block_id, completed=False)
-
+if __name__ == "__main":
     while True:
-        paper_id = get_paper(block_id)
+        while get_seconds() < 27 or get_seconds() > 33:
+            sleep(1)
 
-        if paper_id is None:
-            break
+        next_block, n = get_block()
 
-        txid = upload(paper_id, year, month, block_id, paper_id+".pdf")
+        if next_block is None:
+            sleep(10)
+            continue
 
-        if txid is None:
-            mark_paper(block_id, paper_id, True)
-        else:
-            mark_paper(block_id, paper_id, False, txid)
+        block_id, year, month, blockNum, filename, status = next_block.split(",")
 
-        os.system("cd out; cd {}; rm {}; cd ..; cd ..;".format(block_id, paper_id+".pdf"))
+        printd("Starting block {}".format(block_id))
 
-    while get_seconds() > 55 or get_seconds() < 5:
-        sleep(1)
+        mark_block(block_id, completed=False)
 
-    mark_block(block_id, completed=True)
-    report_upload(block_id, n, NUM_BLOCKS)
+        while True:
+            paper_id = get_paper(block_id)
+
+            if paper_id is None:
+                break
+
+            txid = upload(paper_id, year, month, block_id, paper_id+".pdf")
+
+            if txid is None:
+                mark_paper(block_id, paper_id, True)
+            else:
+                mark_paper(block_id, paper_id, False, txid)
+
+            os.system("cd out; cd {}; rm {}; cd ..; cd ..;".format(block_id, paper_id+".pdf"))
+
+        while get_seconds() > 55 or get_seconds() < 5:
+            sleep(1)
+
+        mark_block(block_id, completed=True)
+        report_upload(block_id, n, NUM_BLOCKS)
 
