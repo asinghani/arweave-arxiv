@@ -159,7 +159,7 @@ def get_paper(block_id):
     printd("Block {} done".format(block_id))
     return None
 
-if __name__ == "__main":
+if __name__ == "__main__":
     while True:
         while get_seconds() < 27 or get_seconds() > 33:
             sleep(1)
